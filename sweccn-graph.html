@@ -1,25 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8"/>
-<script type="text/javascript" src="vis-network.min.js"></script>
+<meta charset="utf-8" />
+<!-- <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script> -->
+<script type="text/javascript" src="_tmp/vis-network.min.js"></script>
 <script type="text/javascript" src="sweccn-graph-data.js"></script>
 <script type="text/javascript" src="sweccn-graph-settings.js"></script>
-<script type="text/javascript" src="cc-graph.js"></script>
+<!-- <script type="text/javascript" src="https://comparative-concepts.github.io/simple-graph-visualizer/graph-visualizer.js"></script> -->
+<!-- <link rel="stylesheet" href="https://comparative-concepts.github.io/simple-graph-visualizer/graph-visualizer.css"/> -->
+<script type="text/javascript" src="../simple-graph-visualizer/graph-visualizer.js"></script>
+<link rel="stylesheet" href="../simple-graph-visualizer/graph-visualizer.css"/>
 <link rel="stylesheet" href="sweccn-graph.css"/>
-<title>SweCcn network</title>
-<style>
-</style>
+<title>CC network</title>
 </head>
 
-<body onload="init()">
+<body onload="initialize()">
   <h1>Visualization of the Swedish Constructicon, SweCCN</h1>
 
   <details>
     <summary>Instructions</summary>
     <p>What the controls mean:</p>
     <ul>
-      <li><b>Graph</b>: Here you select one of five different graph "types". When you have selected one, you can decide which relations you want to see.</li>
+      <li><b>Graph</b>: Here you select one of six different graph types. When you have selected one, you can decide which relations you want to see.</li>
       <li><b>Show</b>: Should the nodes show the ids or the names of the CCs?</li>
       <li><b>Stabilize</b>: You can turn off the auto-stabilization here, or decide which algorithm it should use.</li>
       <li><b>Subgraph</b>: Here you can decide if you want to show just a part of the nodes in the graph (together with their relations).</li>
@@ -35,24 +37,30 @@
       <li>To move the selected nodes, click-and-drag them.</li>
       <li>To see the definition of a CC, hover over a node and wait a little while.</li>
     </ul>
-    <p>A <span style="color:red">red border</span> around a node means that it is not defined in SweCCN.</p>
   </details>
 
   <menu>
     <li><label><b>Graph:</b>
-      <select id="ccGraphType" onchange="selectGraph()">
+      <select id="gvGraphType" onchange="selectGraph()">
         <option value="" selected disabled>Select a graph</option>
       </select>
       </label> &nbsp;
-      <span id="ccRelations"></span>
+      <span id="gvRelations"></span>
     </li>
     <span class="flex-break"></span>
-    <input type="hidden" id="ccShow" value="name"/>
+    <li>
+      <label><b>Show:</b>
+        <select id="gvShow" onchange="changeSettings()">
+          <option value="name" selected>Names</option>
+          <option value="id">IDs</option>
+        </select>
+      </label>
+    </li>
     <li>
       <label><b>Stabilize:</b>
-        <input type="checkbox" id="ccStabilize" checked onchange="changeSettings()"/>
+        <input type="checkbox" id="gvStabilize" checked onchange="changeSettings()"/>
       </label>
-      <select id="ccSolver" onchange="changeSettings()">
+      <select id="gvSolver" onchange="changeSettings()">
         <option value="forceAtlas2Based" selected>Atlas2</option>
         <option value="repulsion">Repulsion</option>
         <option value="barnesHut">Barnes-Hut</option>
@@ -60,42 +68,46 @@
     </li>
     <li>
       <b>Subgraph:</b>
-      <button id="ccClearFilter" onclick="clearFilter()">Clear</button>
-      &nbsp; grow: 
-      <button id="ccGrowUpwards" onclick="revealNeighbors('from')">upwards</button>
-      <button id="ccGrowDownwards" onclick="revealNeighbors('to')">downwards</button>
-      <button id="ccGrowOutwards" onclick="revealNeighbors()">outwards</button>
-      &nbsp; remove: 
-      <button id="ccHideUnselected" onclick="hideUnselected()">unselected</button>
-      <button id="ccHideSelected" onclick="hideSelected()">selected</button>
+      <button id="gvClearFilter" onclick="clearFilter()">clear</button>
+      &nbsp; grow:
+      <button id="gvGrowUpwards" onclick="revealNeighbors('from')">upwards</button>
+      <button id="gvGrowDownwards" onclick="revealNeighbors('to')">downwards</button>
+      <button id="gvGrowOutwards" onclick="revealNeighbors()">outwards</button>
+      &nbsp; remove:
+      <button id="gvHideUnselected" onclick="hideUnselected()">unselected</button>
+      <button id="gvHideSelected" onclick="hideSelected()">selected</button>
     </li>
     <li>
-      <b>Selection:</b> 
-      <button id="ccClearSelection" onclick="clearSelection()">Clear</button>
-      <button id="ccSelectUnconnected" onclick="selectUnconnected()">Unconnected</button>
-      &nbsp; expand: 
-      <button id="ccExpandUpwards" onclick="expandSelection('from')">upwards</button>
-      <button id="ccExpandDownwards" onclick="expandSelection('to')">downwards</button>
-      <button id="ccExpandOutwards" onclick="expandSelection()">outwards</button>
+      <b>Selection:</b>
+      <button id="gvClearSelection" onclick="clearSelection()">clear</button>
+      <button id="gvSelectVisible" onclick="selectVisible()">all visible</button>
+      <button id="gvSelectUnconnected" onclick="selectUnconnected()">unconnected</button>
+      &nbsp; expand:
+      <button id="gvExpandUpwards" onclick="expandSelection('from')">upwards</button>
+      <button id="gvExpandDownwards" onclick="expandSelection('to')">downwards</button>
+      <button id="gvExpandOutwards" onclick="expandSelection()">outwards</button>
     </li>
     <li>
-      search: 
-      <input type="search" id="ccSearch" size="30" placeholder="Type at least 3 characters" oninput="searchNodes()"/>
+      search:
+      <input type="search" id="gvSearch" size="30" placeholder="Type at least 3 characters" oninput="searchNodes()"/>
     </li>
   </menu>
 
-  <div id="ccNetwork"></div>
+  <div id="gvContainer">
+    <div id="gvNetwork"></div>
+    <div id="gvSpinningWheel"><div></div></div>
+  </div>
+  <div id="infoVersion"></div>
+  <div id="infoGraph"></div>
+  <div id="infoSelected"></div>
+  <div id="infoUnconnected"></div>
 
-  <p>
-    <b>Current graph:</b> <span id="statistics"></span>
-  </p>
-
-  <div id="extraInfo"></div>
-
-  <p><b>Visualization:</b> 
-    &copy;2024 <a target="_blank" href="https://github.com/heatherleaf">Peter Ljunglöf</a>, 
-    using the graph library
-    <a target="_blank" href="https://visjs.github.io/vis-network/docs/network/">Vis-Network</a>.
-  </p>
+  <footer>
+    <p><b>Visualization:</b>
+      &copy;2025 <a target="_blank" href="https://github.com/heatherleaf">Peter Ljunglöf</a>,
+      using the graph library
+      <a target="_blank" href="https://visjs.github.io/vis-network/docs/network/">Vis-Network</a>.
+    </p>
+  </footer>
 </body>
 </html>

@@ -1,15 +1,11 @@
 
+import sys
 import re
 import json
-from pathlib import Path
-
-ccn_file = Path("konstruktikon-2024-05-13.json")
-roles_file = Path("konstruktikon-roller-2024-05-13.json")
-types_file = Path("konstruktikon-typer-2024-05-13.json")
 
 RELATIONS = {
-    'inheritance': 'SubtypeOf', 
-    'types': 'TypeAssociation', 
+    'inheritance': 'SubtypeOf',
+    'types': 'TypeAssociation',
     'category': 'CategoryAssociation',
     'framenet': 'FrameAssociation',
 }
@@ -30,11 +26,19 @@ UNKNOWN_TYPES = {
 SKIP_IDS = {'konstruktion', 'Role', 'typ', ''}
 # GENERIC_TYPES = {'grammatik', 'semantik', 'övrigt'}
 
-def convert_ccn():
-    with open(ccn_file) as file:
-        ccns = json.load(file)
-    # with open(roles_file) as file:
-    #     roles = json.load(file)
+
+def convert_structure(struct: str) -> str:
+    struct = re.sub(r"  +", r" ", struct)           # "   " --> " "
+    struct = re.sub(r"(\(|\[|\{) ", r"\1", struct)  # "[ " --> "["
+    struct = re.sub(r" (\)|\]|\})", r"\1", struct)  # " ]" --> "]"
+    struct = re.sub(r"\.\.(\d+)", r"<sup>\1</sup>", struct)  # saldo sense identifiers
+    struct = re.sub(r"\{(.+?)\}", r"<sub>\1</sub>", struct)  # subscripts
+    return struct
+
+
+def convert_ccn(cxn_file: str, types_file: str):
+    with open(cxn_file) as file:
+        cxns = json.load(file)
     with open(types_file) as file:
         types = json.load(file)
 
@@ -42,8 +46,7 @@ def convert_ccn():
     edges: list[dict[str, str]] = []
 
     nodesets = {
-        'cxn': ccns,
-        # 'role': roles,
+        'cxn': cxns,
         'type': types,
     }
 
@@ -54,47 +57,39 @@ def convert_ccn():
             if id in SKIP_IDS:
                 continue
             assert id not in nodes, (elem, nodes[id])
-            title: list[str] = []
-            if (struct := elem.get('structure')):
-                assert len(struct) == 1
-                struct = struct[0]
-                struct = re.sub(r"\.\.\d+", "", struct)  # saldo sense identifiers
-                struct = re.sub(r",,[^\s|\]]+", "", struct)  # superscripts
-                struct = re.sub(r"_[^\s\]\/]+", "", struct)  # subscripts
-                title.append(struct)
+            info: list[str] = []
+            if (structs := elem.get('structure')):
+                for struct in structs:
+                    info.append(convert_structure(struct))
             if (ill := elem.get('illustration')):
-                title.append('"' + ill + '"')
-            if (defn := elem.get('definition')):
-                title.append(defn['text'])
+                info.append(f'"<em>{ill.strip()}</em>"')
+            if (text := elem.get('definition', {}).get('text')):
+                info.append(text)
             nodes[id] = {
                 'id': id,
                 'name': id.replace("_", " "),
                 'type': type,
-                'title': "\n\n".join(title),
+                'info': "<br/>".join(info),
             }
             for rel in RELATIONS:
-                if rel not in elem: 
+                if rel not in elem:
                     continue
                 others = elem[rel]
-                if isinstance(others, str): 
+                if isinstance(others, str):
                     others = [others]
                 for other in others:
                     if other in SKIP_IDS:
                         continue
                     edges.append({
                         'rel': RELATIONS[rel],
-                        'from': other,
-                        'to': id,
+                        'start': other,
+                        'end': id,
                     })
-                    if id == "funktion.evaluering":
-                        import sys
-                        print(edges[-1], file=sys.stderr)
-                        print(nodes[id], file=sys.stderr)
 
     # Add nodes for undefined elements (including all frames)
     for edge in edges:
         rel = edge['rel']
-        for id, other in [(edge['from'], edge['to']), (edge['to'], edge['from'])]:
+        for id, other in [(edge['start'], edge['end']), (edge['end'], edge['start'])]:
             if id not in nodes:
                 type = RELTYPES.get(rel, nodes[other]['type'])
                 type = UNKNOWN_TYPES[type]
@@ -102,19 +97,20 @@ def convert_ccn():
                     'id': id,
                     'name': id.replace("_", " "),
                     'type': type,
-                    'title': "",
+                    'info': "",
                 }
 
-    print("var ccNodes = [")
-    for node in nodes.values():
+    print("var DATA = {};")
+    # print(f"DATA.version = {version};")
+    print(f"DATA.nodes = [")
+    for node in sorted(nodes.values(), key=lambda n: n['id']):
         print("    " + json.dumps(node) + ",")
     print("];")
-    print("var ccEdges = [")
-    for edge in edges:
+    print(f"DATA.edges = [")
+    for edge in sorted(edges, key=lambda e: tuple(e.values())):
         print("    " + json.dumps(edge) + ",")
     print("];")
 
 
 if __name__ == '__main__':
-    convert_ccn()
-
+    convert_ccn(*sys.argv[1:])
