@@ -3,7 +3,7 @@
 
 body {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    background-color: #efc;
+    background-color: lavenderblush;
     font-weight: 300; /* light (falls back to normal=400 if light isn't available */
 }
 
@@ -16,8 +16,8 @@ a {
 }
 
 #gvSpinningWheel > div {
-    border: 16px solid #efc;
-    border-top-color: #8d0;
+    border: 16px solid lavenderblush;
+    border-top-color: thistle;
 }
 
 #gvContainer div.vis-tooltip {
