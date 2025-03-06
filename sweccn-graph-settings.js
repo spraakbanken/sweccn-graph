@@ -1,4 +1,6 @@
 
+window.name = "SweCCN-graph";
+
 var SETTINGS = {};
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -78,7 +80,7 @@ SETTINGS.graphs = {
 SETTINGS.general = {
     info: {
         attribute: "info",            // which attribute in DATA.nodes contains the on-hover information?
-        unkonwn: "[no information]",  // info to show if missing
+        unknown: "[no information]",  // info to show if missing
     },
 };
 
