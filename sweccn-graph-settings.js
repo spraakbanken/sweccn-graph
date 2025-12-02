@@ -17,13 +17,13 @@ const COLORS = {
 // Attributes for the different node types
 // Currently supporting: color, border (default=color)
 SETTINGS.nodes = {
-    cxn:              {color: COLORS.green},
-    cxn_unknown:      {color: COLORS.green, border: COLORS.red},
-    type:             {color: COLORS.gold},
-    type_unknown:     {color: COLORS.gold, border: COLORS.red},
-    category:         {color: COLORS.blue},
-    category_unknown: {color: COLORS.blue, border: COLORS.red},
-    frame:            {color: COLORS.violet},
+    cxn:              {name: "Construction",           color: COLORS.green},
+    cxn_unknown:      {name: "Construction (unknown)", color: COLORS.green, border: COLORS.red},
+    type:             {name: "Type",                   color: COLORS.gold},
+    type_unknown:     {name: "Type (unknown)",         color: COLORS.gold, border: COLORS.red},
+    category:         {name: "Category",               color: COLORS.blue},
+    category_unknown: {name: "Category (unknown)",     color: COLORS.blue, border: COLORS.red},
+    frame:            {name: "Frame",                  color: COLORS.violet},
 };
 
 // Attributes for the different edge types (relations)
@@ -35,49 +35,17 @@ SETTINGS.edges = {
     FrameAssociation:    {name: "Frame",    color: COLORS.violet},
 };
 
-// Attributes for the different graphs
-// Currently supporting: name, defaultrelation, nodes, edges
-SETTINGS.graphs = {
-    cxn: {
-        name: "Constructions",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true},
-        edges: {SubtypeOf: true},
-    },
-    types: {
-        name: "Cxns + Types",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true, type: true, type_unknown: true},
-        edges: {SubtypeOf: true, TypeAssociation: true},
-    },
-    cats: {
-        name: "Cxns + Categories",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true, category: true, category_unknown: true},
-        edges: {SubtypeOf: true, CategoryAssociation: true},
-    },
-    types_cats: {
-        name: "Cxns + Types + Categories",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true, type: true, type_unknown: true, category: true, category_unknown: true},
-        edges: {SubtypeOf: true, TypeAssociation: true, CategoryAssociation: true},
-    },
-    frames: {
-        name: "Cxns + Frames",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true, frame: true},
-        edges: {SubtypeOf: true, FrameAssociation: true},
-    },
-    all: {
-        name: "Everything",
-        defaultrelation: "SubtypeOf",
-        nodes: {cxn: true, cxn_unknown: true, type: true, type_unknown: true, category: true, category_unknown: true, frame: true},
-        edges: {SubtypeOf: true, TypeAssociation: true, CategoryAssociation: true, FrameAssociation: true},
-    },
-};
-
 // General settings
 SETTINGS.general = {
+    nodes: {
+        label: "name",     // Which node attribute to put in the node label
+        title: "Concepts", // The title that will be printed before the checkboxes
+        default: ["cxn", "cxn_unknown", "type", "type_unknown"],
+    },
+    edges: {
+        title: "Relations",      // The title that will be printed before the checkboxes
+        default: ["SubtypeOf"],  // Which checkbox(es) should be checked by default
+    },
     info: {
         attribute: "info",            // which attribute in DATA.nodes contains the on-hover information?
         unknown: "[no information]",  // info to show if missing
